@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BismiPay — Elevación de Racks 2x 22U</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts: Inter & Roboto Condensed for a crisp Swiss-Fintech editorial look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Roboto+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- html2canvas for crisp diagram export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            condensed: ['Roboto Condensed', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              DEFAULT: '#0F387D', // Deep corporate cobalt from the slide deck
+              dark: '#0A2756',
+              deep: '#061938',
+              surface: '#F4F7FC',
+              light: '#E6EDF9',
+              accent: '#1D4ED8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+    /* Exact Unit Heights: 1U = 28px */
+    .u-1 { height: 28px; }
+    .u-2 { height: 56px; }
+    .u-3 { height: 84px; }
+    .u-4 { height: 112px; }
+
+    /* Active device selection on light rack canvas */
+    .slot-active {
+      background-color: #0F387D !important;
+      color: #FFFFFF !important;
+      outline: 2px solid #0F387D;
+      outline-offset: -1px;
+    }
+    .slot-active * {
+      color: #FFFFFF !important;
+    }
+    .slot-active .badge-tag {
+      background-color: #FFFFFF !important;
+      color: #0F387D !important;
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-900 min-h-screen font-sans antialiased selection:bg-brand selection:text-white">
+
+  <!-- Editorial Top Bar -->
+  <header class="border-b-2 border-brand bg-white px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      
+      <div>
+        <p class="text-[11px] font-condensed font-bold uppercase tracking-wider text-brand">
+          Infraestructura Física On-Premise & Edge • Topología de Gabinetes
+        </p>
+        <h1 class="text-2xl sm:text-3xl font-condensed font-extrabold text-brand tracking-tight uppercase">
+          Elevación de Racks 2x 22U — Server Room
+        </h1>
+      </div>
+
+      <!-- Action Buttons & Quick Filter -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center border border-brand/20 bg-brand-surface rounded p-0.5 text-xs font-condensed uppercase font-semibold">
+          <button onclick="setFilter('all')" id="btn-all" class="filter-btn px-2.5 py-1 rounded bg-brand text-white transition-colors">Todos</button>
+          <button onclick="setFilter('server')" id="btn-server" class="filter-btn px-2.5 py-1 rounded text-brand hover:bg-brand-light transition-colors">Servidores</button>
+          <button onclick="setFilter('net')" id="btn-net" class="filter-btn px-2.5 py-1 rounded text-brand hover:bg-brand-light transition-colors">Red</button>
+          <button onclick="setFilter('power')" id="btn-power" class="filter-btn px-2.5 py-1 rounded text-brand hover:bg-brand-light transition-colors">Energía</button>
+        </div>
+
+        <button onclick="exportDiagramImage()" class="px-3.5 py-1.5 rounded border border-brand bg-brand text-white hover:bg-brand-dark text-xs font-condensed uppercase font-bold tracking-wide transition-colors flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Exportar PNG</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Editorial Grid: Left Racks Area + Right Deep Cobalt Inspector -->
+  <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-84px)]">
+
+    <!-- LEFT AREA: Both 22U Racks (Col 7) -->
+    <section class="lg:col-span-7 p-6 sm:p-8 bg-white flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200">
+      
+      <div>
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand/20">
+          <span class="text-xs font-condensed font-bold uppercase tracking-wider text-slate-500">
+            Estándar EIA-310-D • 19 Pulgadas • Profundidad 600 mm
+          </span>
+          <span class="text-xs font-mono font-medium text-brand">
+            Carga Balanceada: Red + Cómputo
+          </span>
+        </div>
+
+        <!-- Racks Canvas Wrapper -->
+        <div id="racks-canvas" class="bg-brand-surface border border-slate-200 rounded-lg p-6 shadow-sm overflow-x-auto">
+          <div class="flex justify-center gap-8 min-w-[560px]">
+
+            <!-- ==================== RACK 1 (CORE & PRODUCCIÓN) ==================== -->
+            <div class="w-[265px] flex flex-col">
+              
+              <!-- Rack Header -->
+              <div class="bg-brand text-white p-2.5 rounded-t border-b-2 border-brand-dark flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-condensed tracking-wider uppercase text-blue-200 block">Gabinete Primario</span>
+                  <h2 class="text-sm font-condensed font-black tracking-wide uppercase">RACK 1 : CORE & PROD</h2>
+                </div>
+                <span class="text-[11px] font-mono bg-brand-dark px-1.5 py-0.5 rounded text-white font-semibold">22U</span>
+              </div>
+
+              <!-- Outer Chassis Frame -->
+              <div class="border-2 border-brand border-t-0 rounded-b bg-white p-1">
+                <div class="flex border border-slate-300 bg-white">
+                  
+                  <!-- U-Ruler (22 down to 01) -->
+                  <div class="w-7 border-r border-slate-300 bg-slate-100 select-none flex flex-col font-mono text-[9px] text-slate-600 font-bold text-center divide-y divide-slate-200">
+                    <div class="u-1 flex items-center justify-center">22</div>
+                    <div class="u-1 flex items-center justify-center">21</div>
+                    <div class="u-1 flex items-center justify-center">20</div>
+                    <div class="u-1 flex items-center justify-center">19</div>
+                    <div class="u-1 flex items-center justify-center">18</div>
+                    <div class="u-1 flex items-center justify-center">17</div>
+                    <div class="u-1 flex items-center justify-center">16</div>
+                    <div class="u-1 flex items-center justify-center">15</div>
+                    <div class="u-1 flex items-center justify-center">14</div>
+                    <div class="u-1 flex items-center justify-center">13</div>
+                    <div class="u-1 flex items-center justify-center">12</div>
+                    <div class="u-1 flex items-center justify-center">11</div>
+                    <div class="u-1 flex items-center justify-center">10</div>
+                    <div class="u-1 flex items-center justify-center">09</div>
+                    <div class="u-1 flex items-center justify-center">08</div>
+                    <div class="u-1 flex items-center justify-center">07</div>
+                    <div class="u-1 flex items-center justify-center">06</div>
+                    <div class="u-1 flex items-center justify-center">05</div>
+                    <div class="u-1 flex items-center justify-center">04</div>
+                    <div class="u-1 flex items-center justify-center">03</div>
+                    <div class="u-1 flex items-center justify-center">02</div>
+                    <div class="u-1 flex items-center justify-center">01</div>
+                  </div>
+
+                  <!-- 19" Mounting Bay -->
+                  <div class="flex-1 flex flex-col divide-y divide-slate-200 font-sans text-[10px]">
+                    
+                    <!-- U22: Panel Ciego Superior -->
+                    <div onclick="inspect('r1-u22')" data-type="passive" class="rack-slot u-1 px-2 flex items-center justify-between text-slate-400 bg-slate-50 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase tracking-wide">Panel Ciego Ventilado</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">1U</span>
+                    </div>
+
+                    <!-- U21: Patch Panel Cat6 24P -->
+                    <div onclick="inspect('r1-u21')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-slate-100 text-slate-800 border-l-2 border-brand font-medium hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed font-bold uppercase truncate">Patch Panel 24P Cat6 (Core)</span>
+                      <span class="badge-tag text-[8px] font-mono text-brand font-bold">1U</span>
+                    </div>
+
+                    <!-- U20: Organizador Pasacables -->
+                    <div onclick="inspect('r1-u20')" data-type="passive" class="rack-slot u-1 px-2 flex items-center justify-between text-slate-500 bg-slate-50 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase tracking-wide">Organizador Pasacables</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">1U</span>
+                    </div>
+
+                    <!-- U19: Switch Core L3 UniFi Pro 24 PoE -->
+                    <div onclick="inspect('r1-u19')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-white text-brand border-l-4 border-brand font-bold hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase truncate flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand"></span>
+                        UniFi Pro 24 PoE (L3 Core)
+                      </span>
+                      <span class="badge-tag text-[8px] font-mono bg-brand text-white px-1 rounded">PoE+</span>
+                    </div>
+
+                    <!-- U18: Firewall UniFi UXG-Pro -->
+                    <div onclick="inspect('r1-u18')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-slate-100 text-slate-800 border-l-2 border-brand font-medium hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase truncate">UniFi Gateway Pro (UXG-Pro)</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-600">FW/DPI</span>
+                    </div>
+
+                    <!-- U17: Cisco ISR 4331 -->
+                    <div onclick="inspect('r1-u17')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-slate-100 text-slate-800 border-l-2 border-slate-700 font-medium hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase truncate">Router Cisco ISR 4331</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-600">WAN Edge</span>
+                    </div>
+
+                    <!-- U16: Switch Acceso USW-24 (Rack 1) -->
+                    <div onclick="inspect('r1-u16')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-white text-slate-700 border-l-2 border-brand/60 font-medium hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase truncate">UniFi USW-24 (Acceso Dev)</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-500">24 GbE</span>
+                    </div>
+
+                    <!-- U14-U15: Bandeja Periféricos WAN (2U) -->
+                    <div onclick="inspect('r1-u14-15')" data-type="net" class="rack-slot u-2 px-2 py-1 flex flex-col justify-between bg-slate-50 border-l-2 border-slate-400 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between text-[9px] font-condensed font-bold uppercase text-slate-700">
+                        <span>Bandeja Periféricos WAN (2U)</span>
+                        <span class="badge-tag text-[8px] font-mono text-slate-500">ONT / STARLINK</span>
+                      </div>
+                      <div class="text-[8px] font-mono text-slate-500 flex gap-1">
+                        <span>Módem Fibra ZTE</span> • <span>Kit Starlink</span> • <span>TAP Pasivo</span>
+                      </div>
+                    </div>
+
+                    <!-- U11-U13: Reserva Térmica / Pasivo (3U) -->
+                    <div onclick="inspect('r1-u11-13')" data-type="passive" class="rack-slot u-3 flex flex-col items-center justify-center text-center p-2 text-slate-400 bg-slate-50/60 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase font-semibold text-slate-400 tracking-wider">Cámara de Ventilación Pasiva</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">3U libres de disipación</span>
+                    </div>
+
+                    <!-- U07-U10: Servidor 2 (Lenovo ST45 V3 acostado - 4U) -->
+                    <div onclick="inspect('r1-u07-10')" data-type="server" class="rack-slot u-4 p-2 flex flex-col justify-between bg-white border-l-4 border-slate-700 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between border-b border-slate-200 pb-0.5">
+                        <span class="font-condensed font-bold text-brand text-[10px] uppercase">Servidor 2 (IaC & CI/CD)</span>
+                        <span class="badge-tag text-[8px] font-mono text-slate-500">10.0.100.11</span>
+                      </div>
+                      <div class="text-[8px] text-slate-600 font-sans">
+                        <p class="font-semibold text-slate-800">Lenovo ThinkSystem ST45 V3 (4U)</p>
+                        <p class="text-slate-500">Controlador Terraform • Runners CI/CD</p>
+                      </div>
+                      <div class="text-[8px] font-mono text-slate-500 flex justify-between">
+                        <span>Bandeja 400mm</span>
+                        <span class="font-semibold text-slate-700">NVMe 2TB + SATA 2TB</span>
+                      </div>
+                    </div>
+
+                    <!-- U03-U06: Servidor 3 (Lenovo ST45 V3 acostado - 4U) -->
+                    <div onclick="inspect('r1-u03-06')" data-type="server" class="rack-slot u-4 p-2 flex flex-col justify-between bg-white border-l-4 border-brand hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between border-b border-slate-200 pb-0.5">
+                        <span class="font-condensed font-bold text-brand text-[10px] uppercase">Servidor 3 (ERP & DA)</span>
+                        <span class="badge-tag text-[8px] font-mono font-bold text-brand">10.0.100.12</span>
+                      </div>
+                      <div class="text-[8px] text-slate-600 font-sans">
+                        <p class="font-semibold text-slate-800">Lenovo ThinkSystem ST45 V3 (4U)</p>
+                        <p class="text-slate-500">ERP Corporativo • Bóveda Local Abuelo</p>
+                      </div>
+                      <div class="text-[8px] font-mono text-brand font-semibold flex justify-between">
+                        <span>Bandeja 400mm</span>
+                        <span>NVMe 2TB + 2TB + 8TB</span>
+                      </div>
+                    </div>
+
+                    <!-- U01-U02: UPS 1 APC 3000VA (2U) -->
+                    <div onclick="inspect('r1-u01-02')" data-type="power" class="rack-slot u-2 p-2 flex flex-col justify-between bg-slate-100 border-l-4 border-amber-500 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between text-[9px] font-condensed font-bold uppercase text-slate-800">
+                        <span>UPS 1: APC SRV3KRI (3kVA)</span>
+                        <span class="badge-tag text-[8px] font-mono text-slate-600">2U ON-LINE</span>
+                      </div>
+                      <div class="text-[8px] font-mono text-slate-600 flex justify-between">
+                        <span class="text-emerald-700 font-bold">Transferencia 0 ms</span>
+                        <span>BAT: 100% (Gen Sync)</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ==================== RACK 2 (STAGING & CCTV) ==================== -->
+            <div class="w-[265px] flex flex-col">
+              
+              <!-- Rack Header -->
+              <div class="bg-brand text-white p-2.5 rounded-t border-b-2 border-brand-dark flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-condensed tracking-wider uppercase text-blue-200 block">Gabinete Secundario</span>
+                  <h2 class="text-sm font-condensed font-black tracking-wide uppercase">RACK 2 : STAGING & CCTV</h2>
+                </div>
+                <span class="text-[11px] font-mono bg-brand-dark px-1.5 py-0.5 rounded text-white font-semibold">22U</span>
+              </div>
+
+              <!-- Outer Chassis Frame -->
+              <div class="border-2 border-brand border-t-0 rounded-b bg-white p-1">
+                <div class="flex border border-slate-300 bg-white">
+                  
+                  <!-- U-Ruler (22 down to 01) -->
+                  <div class="w-7 border-r border-slate-300 bg-slate-100 select-none flex flex-col font-mono text-[9px] text-slate-600 font-bold text-center divide-y divide-slate-200">
+                    <div class="u-1 flex items-center justify-center">22</div>
+                    <div class="u-1 flex items-center justify-center">21</div>
+                    <div class="u-1 flex items-center justify-center">20</div>
+                    <div class="u-1 flex items-center justify-center">19</div>
+                    <div class="u-1 flex items-center justify-center">18</div>
+                    <div class="u-1 flex items-center justify-center">17</div>
+                    <div class="u-1 flex items-center justify-center">16</div>
+                    <div class="u-1 flex items-center justify-center">15</div>
+                    <div class="u-1 flex items-center justify-center">14</div>
+                    <div class="u-1 flex items-center justify-center">13</div>
+                    <div class="u-1 flex items-center justify-center">12</div>
+                    <div class="u-1 flex items-center justify-center">11</div>
+                    <div class="u-1 flex items-center justify-center">10</div>
+                    <div class="u-1 flex items-center justify-center">09</div>
+                    <div class="u-1 flex items-center justify-center">08</div>
+                    <div class="u-1 flex items-center justify-center">07</div>
+                    <div class="u-1 flex items-center justify-center">06</div>
+                    <div class="u-1 flex items-center justify-center">05</div>
+                    <div class="u-1 flex items-center justify-center">04</div>
+                    <div class="u-1 flex items-center justify-center">03</div>
+                    <div class="u-1 flex items-center justify-center">02</div>
+                    <div class="u-1 flex items-center justify-center">01</div>
+                  </div>
+
+                  <!-- 19" Mounting Bay -->
+                  <div class="flex-1 flex flex-col divide-y divide-slate-200 font-sans text-[10px]">
+                    
+                    <!-- U22: Panel Ciego Superior -->
+                    <div onclick="inspect('r2-u22')" data-type="passive" class="rack-slot u-1 px-2 flex items-center justify-between text-slate-400 bg-slate-50 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase tracking-wide">Panel Ciego Superior</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">1U</span>
+                    </div>
+
+                    <!-- U21: Patch Panel Cat6 24P (CCTV / APs / Puestos) -->
+                    <div onclick="inspect('r2-u21')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-slate-100 text-slate-800 border-l-2 border-emerald-600 font-medium hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed font-bold uppercase truncate">Patch Panel CCTV / APs (24P)</span>
+                      <span class="badge-tag text-[8px] font-mono text-emerald-700 font-bold">1U</span>
+                    </div>
+
+                    <!-- U20: Organizador Pasacables -->
+                    <div onclick="inspect('r2-u20')" data-type="passive" class="rack-slot u-1 px-2 flex items-center justify-between text-slate-500 bg-slate-50 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase tracking-wide">Organizador Pasacables</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">1U</span>
+                    </div>
+
+                    <!-- U19: Switch Acceso USW-24 (Rack 2: CCTV / APs / VoIP) -->
+                    <div onclick="inspect('r2-u19')" data-type="net" class="rack-slot u-1 px-2 flex items-center justify-between bg-white text-emerald-800 border-l-4 border-emerald-600 font-bold hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase truncate flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        UniFi USW-24 (Acceso CCTV/VoIP)
+                      </span>
+                      <span class="badge-tag text-[8px] font-mono bg-emerald-600 text-white px-1 rounded">24 GbE</span>
+                    </div>
+
+                    <!-- U17-U18: Bahías de Expansión / Cierre (2U) -->
+                    <div onclick="inspect('r2-u17-18')" data-type="passive" class="rack-slot u-2 flex flex-col items-center justify-center text-center p-1 text-slate-400 bg-slate-50/70 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase font-semibold text-slate-400">Bahías de Expansión (2U)</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">Reserva appliance NVR / Switch</span>
+                    </div>
+
+                    <!-- U15-U16: Bandeja de Accesorios / Patch Cords Fríos (2U) -->
+                    <div onclick="inspect('r2-u15-16')" data-type="passive" class="rack-slot u-2 px-2 py-1 flex flex-col justify-between bg-slate-50 border-l-2 border-slate-300 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between text-[9px] font-condensed font-bold uppercase text-slate-600">
+                        <span>Bandeja de Accesorios & Kits (2U)</span>
+                        <span class="badge-tag text-[8px] font-mono text-slate-400">REPUESTOS</span>
+                      </div>
+                      <div class="text-[8px] font-mono text-slate-500">Patch cords de reserva • Transceivers SFP • Herramientas</div>
+                    </div>
+
+                    <!-- U11-U14: Reserva Modular & Térmica (4U) -->
+                    <div onclick="inspect('r2-u11-14')" data-type="passive" class="rack-slot u-4 flex flex-col items-center justify-center text-center p-2 text-slate-400 bg-slate-50/50 hover:bg-brand-light cursor-pointer transition-colors">
+                      <span class="text-[9px] font-condensed uppercase font-semibold text-slate-400 tracking-wider">Cámara de Ventilación & Expansión</span>
+                      <span class="badge-tag text-[8px] font-mono text-slate-400">4U libres de disipación y cómputo</span>
+                    </div>
+
+                    <!-- U07-U10: Servidor 1 (Lenovo ST45 V3 acostado - 4U) -->
+                    <div onclick="inspect('r2-u07-10')" data-type="server" class="rack-slot u-4 p-2 flex flex-col justify-between bg-white border-l-4 border-slate-600 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between border-b border-slate-200 pb-0.5">
+                        <span class="font-condensed font-bold text-slate-800 text-[10px] uppercase">Servidor 1 (QA / Staging)</span>
+                        <span class="badge-tag text-[8px] font-mono text-slate-500">10.0.100.10</span>
+                      </div>
+                      <div class="text-[8px] text-slate-600 font-sans">
+                        <p class="font-semibold text-slate-800">Lenovo ThinkSystem ST45 V3 (4U)</p>
+                        <p class="text-slate-500">Consultora QA • Cold Spare de ERP</p>
+                      </div>
+                      <div class="text-[8px] font-mono text-slate-500 flex justify-between">
+                        <span>Bandeja 400mm</span>
+                        <span class="font-semibold text-slate-700">NVMe 2TB + SATA 2TB</span>
+                      </div>
+                    </div>
+
+                    <!-- U03-U06: Servidor 4 (Lenovo ST45 V3 acostado - 4U) -->
+                    <div onclick="inspect('r2-u03-06')" data-type="server" class="rack-slot u-4 p-2 flex flex-col justify-between bg-white border-l-4 border-emerald-600 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between border-b border-slate-200 pb-0.5">
+                        <span class="font-condensed font-bold text-emerald-800 text-[10px] uppercase">Servidor 4 (CCTV & PBX)</span>
+                        <span class="badge-tag text-[8px] font-mono font-bold text-emerald-700">10.0.100.13</span>
+                      </div>
+                      <div class="text-[8px] text-slate-600 font-sans">
+                        <p class="font-semibold text-slate-800">Lenovo ThinkSystem ST45 V3 (4U)</p>
+                        <p class="text-slate-500">iVMS-4200 NVR • Central Asterisk VoIP</p>
+                      </div>
+                      <div class="text-[8px] font-mono text-emerald-700 font-semibold flex justify-between">
+                        <span>Bandeja 400mm</span>
+                        <span>NVMe 2TB + 4TB WD Purple</span>
+                      </div>
+                    </div>
+
+                    <!-- U01-U02: UPS 2 APC 3000VA (2U) -->
+                    <div onclick="inspect('r2-u01-02')" data-type="power" class="rack-slot u-2 p-2 flex flex-col justify-between bg-slate-100 border-l-4 border-amber-500 hover:bg-brand-light cursor-pointer transition-colors">
+                      <div class="flex items-center justify-between text-[9px] font-condensed font-bold uppercase text-slate-800">
+                        <span>UPS 2: APC SRV3KRI (3kVA)</span>
+                        <span class="badge-tag text-[8px] font-mono text-slate-600">2U ON-LINE</span>
+                      </div>
+                      <div class="text-[8px] font-mono text-slate-600 flex justify-between">
+                        <span class="text-emerald-700 font-bold">Transferencia 0 ms</span>
+                        <span>Aislamiento Total Rack 1</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <p class="mt-3 text-center text-xs font-condensed text-slate-500 uppercase tracking-wide">
+          Haga clic sobre cualquier módulo o unidad para inspeccionar su ficha técnica y cargas de trabajo en el panel derecho.
+        </p>
+      </div>
+
+      <!-- Quick Summary Stats Bar at Bottom of Left Area -->
+      <div class="mt-6 pt-4 border-t border-slate-200 grid grid-cols-4 gap-3 text-center">
+        <div class="p-2 border border-slate-200 rounded bg-slate-50">
+          <span class="text-[10px] font-condensed font-bold text-slate-500 uppercase block">Cómputo Total</span>
+          <span class="text-base font-condensed font-extrabold text-brand">4 SERVIDORES</span>
+        </div>
+        <div class="p-2 border border-slate-200 rounded bg-slate-50">
+          <span class="text-[10px] font-condensed font-bold text-slate-500 uppercase block">Conmutación</span>
+          <span class="text-base font-condensed font-extrabold text-brand">3 SWITCHES</span>
+        </div>
+        <div class="p-2 border border-slate-200 rounded bg-slate-50">
+          <span class="text-[10px] font-condensed font-bold text-slate-500 uppercase block">Capacidad UPS</span>
+          <span class="text-base font-condensed font-extrabold text-brand">6000 VA (2x 3kVA)</span>
+        </div>
+        <div class="p-2 border border-slate-200 rounded bg-slate-50">
+          <span class="text-[10px] font-condensed font-bold text-slate-500 uppercase block">Ocupación Física</span>
+          <span class="text-base font-condensed font-extrabold text-emerald-700">44U NOMINAL</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT AREA: Deep Cobalt Blue Editorial Hardware Inspector (Col 5) -->
+    <aside class="lg:col-span-5 bg-brand text-white p-6 sm:p-8 flex flex-col justify-between">
+      
+      <div class="space-y-6">
+
+        <!-- Top Category Badge & Position -->
+        <div class="flex items-center justify-between border-b border-blue-400/30 pb-3">
+          <span id="insp-category" class="text-xs font-condensed font-bold tracking-widest uppercase text-blue-200">
+            HARDWARE / SERVIDOR FÍSICO ON-PREMISE
+          </span>
+          <span id="insp-slot" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-brand-dark text-white border border-blue-400/40">
+            RACK 1 • U03-U06 (4U)
+          </span>
+        </div>
+
+        <!-- Big Impact Title (Slide Deck Typography Style) -->
+        <div class="space-y-1">
+          <h2 id="insp-title" class="text-2xl sm:text-3xl font-condensed font-extrabold tracking-tight uppercase leading-tight text-white">
+            SERVIDOR 3: NEGOCIO, ERP & DATA ANALYTICS
+          </h2>
+          <p id="insp-model" class="text-xs font-mono text-blue-200">
+            Lenovo ThinkSystem ST45 V3 (Chasis Torre acostado 4U)
+          </p>
+        </div>
+
+        <!-- Software & IP Row -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div class="p-3 bg-brand-dark/80 rounded border border-blue-400/30">
+            <span class="text-[10px] font-condensed font-bold uppercase tracking-wider text-blue-300 block mb-0.5">Software / SO</span>
+            <span id="insp-software" class="text-xs font-mono font-bold text-white block truncate">Ubuntu Server 24.04 LTS</span>
+          </div>
+          <div class="p-3 bg-brand-dark/80 rounded border border-blue-400/30">
+            <span class="text-[10px] font-condensed font-bold uppercase tracking-wider text-blue-300 block mb-0.5">Dirección IP / VLAN</span>
+            <span id="insp-ip" class="text-xs font-mono font-bold text-sky-300 block">10.0.100.12 (VLAN 100)</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Body Area -->
+        <div id="insp-content" class="space-y-5">
+          <!-- Populated by JavaScript -->
+        </div>
+
+      </div>
+
+      <!-- Footer Policy Quote (matching the slide footer) -->
+      <div class="mt-8 pt-4 border-t border-blue-400/30 text-[11px] font-condensed uppercase tracking-wider text-blue-200">
+        LA TOLERANCIA A FALLAS Y EL RESGUARDO INMUTABLE PROTEGEN LA CONTINUIDAD OPERATIVA.
+      </div>
+
+    </aside>
+
+  </main>
+
+  <script>
+    // Comprehensive Hardware Inventory
+    const catalog = {
+      // ===== SERVIDORES =====
+      'r1-u03-06': {
+        category: 'HARDWARE / SERVIDOR FÍSICO ON-PREMISE',
+        slot: 'RACK 1 • U03-U06 (4U)',
+        title: 'SERVIDOR 3: NEGOCIO, ERP & DATA ANALYTICS',
+        model: 'Lenovo ThinkSystem ST45 V3 (Torre 4U en bandeja de 400mm)',
+        software: 'Ubuntu Server 24.04 LTS + MariaDB + Docker',
+        ip: '10.0.100.12 (VLAN 100)',
+        isServer: true,
+        specs: {
+          cpu: 'AMD EPYC 4004 (8 Cores / 16 Threads @ 3.8 GHz)',
+          ram: '64 GB DDR5-4800 MHz ECC UDIMM',
+          psu: '300W 80 PLUS Gold (Conexión directa a UPS 1)',
+          network: '2x 1GbE RJ-45 integrados hacia Switch Core L3',
+          storage: [
+            { tier: 'Tier 1 (Procesamiento)', drive: 'SSD M.2 NVMe 2TB Kingston NV3', desc: 'Sistema operativo, tablas transaccionales del ERP y consultas analíticas activas.' },
+            { tier: 'Tier 2 (Staging)', drive: 'HDD SATA 2TB Enterprise (Default)', desc: 'Volcados nocturnos locales automáticos y logs temporales.' },
+            { tier: 'Tier 3 (Bóveda Local)', drive: 'HDD SATA NAS 8TB WD Red Pro 24/7', desc: 'Archivo inmutable del Abuelo mensual de AWS y datasets históricos masivos.' }
+          ]
+        },
+        workloads: [
+          { name: 'ERP Corporativo (MariaDB / Odoo)', desc: 'Gestión contable, administrativa, compras, inventario interno y sueldos.' },
+          { name: 'Motor Data Analytics & Dashboards', desc: 'Consultas analíticas pesadas sobre réplicas sin tocar la producción en la nube.' },
+          { name: 'Bóveda de Resguardo Offsite (Abuelo)', desc: 'Recepción del volcado mensual inmutable exportado desde la nube AWS.' }
+        ]
+      },
+
+      'r1-u07-10': {
+        category: 'HARDWARE / SERVIDOR FÍSICO ON-PREMISE',
+        slot: 'RACK 1 • U07-U10 (4U)',
+        title: 'SERVIDOR 2: INFRAESTRUCTURA, IaC & CI/CD',
+        model: 'Lenovo ThinkSystem ST45 V3 (Torre 4U en bandeja de 400mm)',
+        software: 'Ubuntu Server 24.04 LTS + Terraform + GitLab Runner',
+        ip: '10.0.100.11 (VLAN 100)',
+        isServer: true,
+        specs: {
+          cpu: 'AMD EPYC 4004 (6 Cores / 12 Threads @ 3.5 GHz)',
+          ram: '32 GB DDR5-4800 MHz ECC UDIMM',
+          psu: '300W 80 PLUS Gold (Conexión directa a UPS 1)',
+          network: '2x 1GbE RJ-45 integrados hacia Switch Core L3',
+          storage: [
+            { tier: 'Tier 1 (Sistema & Cómputo)', drive: 'SSD M.2 NVMe 2TB Kingston NV3', desc: 'SO, estado de Terraform (.tfstate) y cache de compilación.' },
+            { tier: 'Tier 2 (Artefactos & Logs)', drive: 'HDD SATA 2TB Enterprise (Default)', desc: 'Almacén local de imágenes Docker y paquetes de CI/CD.' }
+          ]
+        },
+        workloads: [
+          { name: 'Terraform Automation Controller', desc: 'Orquestación de infraestructura multi-cloud hacia OCI y AWS.' },
+          { name: 'Runners de CI/CD Locales', desc: 'Compilación y pruebas automatizadas de microservicios antes de despliegue.' },
+          { name: 'Gestor Local de Secretos & Configs', desc: 'Caché segura de variables de entorno y llaves operativas.' }
+        ]
+      },
+
+      'r2-u07-10': {
+        category: 'HARDWARE / SERVIDOR FÍSICO ON-PREMISE',
+        slot: 'RACK 2 • U07-U10 (4U)',
+        title: 'SERVIDOR 1: QA / TESTING EXTERNO & COLD SPARE',
+        model: 'Lenovo ThinkSystem ST45 V3 (Torre 4U en bandeja de 400mm)',
+        software: 'Ubuntu Server 24.04 LTS + Docker',
+        ip: '10.0.100.10 (VLAN 100)',
+        isServer: true,
+        specs: {
+          cpu: 'AMD EPYC 4004 (6 Cores / 12 Threads @ 3.5 GHz)',
+          ram: '32 GB DDR5-4800 MHz ECC UDIMM',
+          psu: '300W 80 PLUS Gold (Conexión directa a UPS 2)',
+          network: '2x 1GbE RJ-45 enlazados por canaleta hacia Switch Core',
+          storage: [
+            { tier: 'Tier 1 (Staging efímero)', drive: 'SSD M.2 NVMe 2TB Kingston NV3', desc: 'Entornos temporales de prueba para la consultora externa de QA.' },
+            { tier: 'Tier 2 (Respaldo Cold Spare)', drive: 'HDD SATA 2TB Enterprise (Default)', desc: 'Destino listo para asumir el ERP ante avería física del Servidor 3.' }
+          ]
+        },
+        workloads: [
+          { name: 'Entorno de Pruebas QA Externo', desc: 'Validación de APIs y pruebas de regresión por equipo auditor externo.' },
+          { name: 'Hardware de Reserva Fría (Cold Spare)', desc: 'Capacidad de levantar inmediatamente el ERP corporativo local.' }
+        ]
+      },
+
+      'r2-u03-06': {
+        category: 'HARDWARE / SERVIDOR FÍSICO ON-PREMISE',
+        slot: 'RACK 2 • U03-U06 (4U)',
+        title: 'SERVIDOR 4: COMUNICACIONES, IP-PBX & CCTV (NVR)',
+        model: 'Lenovo ThinkSystem ST45 V3 (Torre 4U en bandeja de 400mm)',
+        software: 'Debian 12 + Hikvision iVMS-4200 + Asterisk PBX',
+        ip: '10.0.100.13 (VLAN 100)',
+        isServer: true,
+        specs: {
+          cpu: 'AMD EPYC 4004 (6 Cores / 12 Threads @ 3.5 GHz)',
+          ram: '32 GB DDR5-4800 MHz ECC UDIMM',
+          psu: '300W 80 PLUS Gold (Conexión directa a UPS 2)',
+          network: '2x 1GbE RJ-45 hacia Switch de Acceso USW-24',
+          storage: [
+            { tier: 'Tier 1 (Sistema & VoIP)', drive: 'SSD M.2 NVMe 2TB Kingston NV3', desc: 'SO Debian, base de datos de llamadas CDR y buzones de voz.' },
+            { tier: 'Tier 2 (Grabación CCTV 24/7)', drive: 'HDD SATA 4TB WD Purple Surveillance', desc: 'Almacenamiento continuo de 6 cámaras Hikvision H.265+ (FIFO 30 días).' }
+          ]
+        },
+        workloads: [
+          { name: 'Servidor NVR iVMS-4200 (Hikvision)', desc: 'Ingesta de video continuo de las 6 cámaras IP (12 Mbps en total).' },
+          { name: 'Central Telefónica IP (Asterisk)', desc: 'Gestión de internos SIP para teléfonos Grandstream y recepción.' }
+        ]
+      },
+
+      // ===== NETWORKING & PERIFÉRICOS =====
+      'r1-u19': {
+        category: 'SWITCH NÚCLEO MULTICAPA L3',
+        slot: 'RACK 1 • U19 (1U)',
+        title: 'SWITCH CORE L3: UNIFI PRO 24 POE',
+        model: 'Ubiquiti UniFi Switch Pro 24 PoE (USW-Pro-24-PoE)',
+        software: 'UniFi Network Controller v8.x',
+        ip: '10.0.1.2 (VLAN 1 Gestión)',
+        isServer: false,
+        specsList: [
+          { label: 'Puertos de Acceso', value: '24x GbE RJ-45 (16x PoE+, 8x PoE++)' },
+          { label: 'Uplinks SFP+ 10G', value: '2x 10G SFP+ hacia Switches de Acceso' },
+          { label: 'Presupuesto PoE', value: '400 W de potencia disponible' },
+          { label: 'Capacidad de Conmutación', value: '88 Gbps / Ruteo Inter-VLAN a velocidad de cable' }
+        ],
+        role: 'Núcleo de red institucional. Conmuta a velocidad de línea el tráfico inter-VLAN y entrega energía PoE crítica a equipos de borde.'
+      },
+
+      'r1-u18': {
+        category: 'FIREWALL & SEGURIDAD PERIMETRAL',
+        slot: 'RACK 1 • U18 (1U)',
+        title: 'FIREWALL PERIMETRAL: UNIFI UXG-PRO',
+        model: 'Ubiquiti Next-Generation Gateway Pro (UXG-Pro)',
+        software: 'UniFi OS / Network Application',
+        ip: '10.0.0.1 (Gateway Corporativo)',
+        isServer: false,
+        specsList: [
+          { label: 'Puertos WAN/LAN', value: '2x SFP+ 10G + 2x GbE RJ-45' },
+          { label: 'Inspección Profunda', value: 'DPI (L7) + IDS/IPS a 3.5 Gbps sin degradación' },
+          { label: 'Segmentación', value: 'Aislamiento estricto de VLANs 10, 20, 30, 40, 50 y 100' }
+        ],
+        role: 'Inspecciona y segmenta el tráfico de la empresa, previniendo intrusiones y aislando cámaras, telefonía y desarrollo.'
+      },
+
+      'r1-u17': {
+        category: 'ROUTER DE BORDE WAN',
+        slot: 'RACK 1 • U17 (1U)',
+        title: 'ROUTER DE BORDE: CISCO ISR 4331',
+        model: 'Cisco ISR 4331/K9 (1U Rackmount)',
+        software: 'Cisco IOS-XE 17.9 Enterprise',
+        ip: '192.168.1.1 (Gateway WAN)',
+        isServer: false,
+        specsList: [
+          { label: 'Puertos de Borde', value: '3x GE integrados (2x RJ-45 + 1x SFP)' },
+          { label: 'Túneles Seguros', value: 'IPSec Site-to-Site permanente contra OCI y AWS' },
+          { label: 'Conmutación WAN', value: 'Failover automático con IP SLA (Fibra Óptica ↔ Starlink)' }
+        ],
+        role: 'Punto de entrada perimetral. Administra el enrutamiento WAN, balanceo y los túneles seguros hacia las dos nubes.'
+      },
+
+      'r1-u16': {
+        category: 'SWITCH DE ACCESO L2 (DESARROLLO)',
+        slot: 'RACK 1 • U16 (1U)',
+        title: 'SWITCH ACCESO: UNIFI STANDARD 24',
+        model: 'Ubiquiti UniFi Switch Standard 24 (USW-24)',
+        software: 'UniFi Network Firmware v7.x',
+        ip: '10.0.1.3 (VLAN 1 Gestión)',
+        isServer: false,
+        specsList: [
+          { label: 'Puertos', value: '24x GbE RJ-45 + 2x 1G SFP' },
+          { label: 'Uplink', value: 'Enlace SFP hacia Switch Core L3 (U19)' },
+          { label: 'Asignación', value: 'Puestos de desarrollo e ingeniería' }
+        ],
+        role: 'Distribución de conectividad por cable para puestos del equipo de desarrollo y runners locales.'
+      },
+
+      'r2-u19': {
+        category: 'SWITCH DE ACCESO L2 (CCTV & APs)',
+        slot: 'RACK 2 • U19 (1U)',
+        title: 'SWITCH ACCESO: UNIFI STANDARD 24 (RACK 2)',
+        model: 'Ubiquiti UniFi Switch Standard 24 (USW-24)',
+        software: 'UniFi Network Firmware v7.x',
+        ip: '10.0.1.4 (VLAN 1 Gestión)',
+        isServer: false,
+        specsList: [
+          { label: 'Puertos', value: '24x GbE RJ-45 + 2x 1G SFP' },
+          { label: 'Uplink Inter-Rack', value: 'Enlace de fibra/SFP inter-rack hacia el Core del Rack 1' },
+          { label: 'Asignación', value: 'VLAN 30 (CCTV), VLAN 40 (APs), VLAN 50 (VoIP)' }
+        ],
+        role: 'Desembarco dedicado de las líneas del Rack 2, evitando saturar el cableado horizontal entre gabinetes.'
+      },
+
+      'r1-u14-15': {
+        category: 'BANDEJA DE PERIFÉRICOS WAN',
+        slot: 'RACK 1 • U14-U15 (2U)',
+        title: 'BANDEJA ACOMETIDA WAN (2U)',
+        model: 'Bandeja fija ventilada 19" 400mm',
+        software: 'Web GUI de Proveedores / Pasivo',
+        ip: 'ONT: 192.168.100.1 • Starlink: 192.168.1.1',
+        isServer: false,
+        specsList: [
+          { label: 'Enlace Primario', value: 'Módem Fibra Óptica ONT ZTE F601' },
+          { label: 'Enlace Contingencia', value: 'Kit Satelital Starlink Standard (Fuente + Router en Bypass)' },
+          { label: 'Inspección', value: 'Network TAP Pasivo para captura de paquetes' }
+        ],
+        role: 'Aloja de forma segura los módems de ambos ISPs antes de ingresar al router Cisco de borde.'
+      },
+
+      'r1-u21': {
+        category: 'CABLEADO ESTRUCTURADO',
+        slot: 'RACK 1 • U21 (1U)',
+        title: 'PATCH PANEL 24P CAT6 (RACK 1)',
+        model: 'Ubiquiti Blank Keystone 24-Port 1U',
+        software: 'Pasivo / Capa 1',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [
+          { label: 'Norma', value: 'TIA/EIA 568-B Cat6 UTP 250 MHz' },
+          { label: 'Destino', value: 'Servidores 2 y 3, Router Cisco, Firewall y Uplinks' }
+        ],
+        role: 'Desembarco ordenado del cableado horizontal del gabinete de cómputo principal.'
+      },
+
+      'r2-u21': {
+        category: 'CABLEADO ESTRUCTURADO',
+        slot: 'RACK 2 • U21 (1U)',
+        title: 'PATCH PANEL 24P CAT6 (CCTV & VOIP)',
+        model: 'Ubiquiti Blank Keystone 24-Port 1U',
+        software: 'Pasivo / Capa 1',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [
+          { label: 'Puertos 1-6', value: 'VLAN 30 (6x Cámaras Hikvision DS-2CD1123G0-I)' },
+          { label: 'Puertos 7-8', value: 'VLAN 40 (2x Access Points UniFi U6-Pro)' },
+          { label: 'Puertos 9-16', value: 'VLAN 50 (Puestos administrativos y telefonía)' }
+        ],
+        role: 'Punto de terminación física para videovigilancia, Wi-Fi y telefonía IP Grandstream.'
+      },
+
+      // ===== ENERGÍA =====
+      'r1-u01-02': {
+        category: 'ALIMENTACIÓN ININTERRUMPIDA',
+        slot: 'RACK 1 • U01-U02 (2U)',
+        title: 'UPS 1: APC EASY UPS ON-LINE 3000VA',
+        model: 'APC SRV3KRI On-Line 2U',
+        software: 'PowerChute / Tarjeta de Red SNMP',
+        ip: '10.0.1.5 (VLAN 1 Gestión)',
+        isServer: false,
+        specsList: [
+          { label: 'Capacidad', value: '3000 VA / 2400 W (Factor de Potencia 0.8)' },
+          { label: 'Topología', value: 'Doble conversión On-Line real (0 ms de conmutación)' },
+          { label: 'Respaldo Secundario', value: 'Generador a nafta con transferencia en 30s' }
+        ],
+        role: 'Protege y energiza sin microcortes al Rack 1 (Servidores 2 y 3, Switch Core y Router de Borde).'
+      },
+
+      'r2-u01-02': {
+        category: 'ALIMENTACIÓN ININTERRUMPIDA',
+        slot: 'RACK 2 • U01-U02 (2U)',
+        title: 'UPS 2: APC EASY UPS ON-LINE 3000VA',
+        model: 'APC SRV3KRI On-Line 2U',
+        software: 'PowerChute / Tarjeta de Red SNMP',
+        ip: '10.0.1.6 (VLAN 1 Gestión)',
+        isServer: false,
+        specsList: [
+          { label: 'Capacidad', value: '3000 VA / 2400 W (Factor de Potencia 0.8)' },
+          { label: 'Topología', value: 'Doble conversión On-Line real (0 ms de conmutación)' },
+          { label: 'Aislamiento', value: 'Independencia total del Rack 2 frente al Rack 1' }
+        ],
+        role: 'Alimenta de forma dedicada al Rack 2 (Servidor 1 QA, Servidor 4 CCTV/VoIP y Switch de Acceso).'
+      },
+
+      // ===== ACCESORIOS Y PASIVOS =====
+      'r2-u15-16': {
+        category: 'BANDEJA DE ACCESORIOS & REPUESTOS',
+        slot: 'RACK 2 • U15-U16 (2U)',
+        title: 'BANDEJA DE KITS Y REPUESTOS FRÍOS (2U)',
+        model: 'Bandeja metálica ventilada 19" 400mm',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [
+          { label: 'Contenido', value: 'Patch cords Cat6 de repuesto, transceivers SFP 10G/1G' },
+          { label: 'Herramientas', value: 'Crimpeadora, tester de red RJ-45, kit de tornillos jaula' }
+        ],
+        role: 'Disponibilidad inmediata de repuestos en el Server Room para mantenimiento preventivo y correctivo.'
+      },
+
+      'r1-u11-13': {
+        category: 'VENTILACIÓN TÉRMICA',
+        slot: 'RACK 1 • U11-U13 (3U)',
+        title: 'CÁMARA DE VENTILACIÓN TÉRMICA (3U)',
+        model: 'Paneles microperforados de 19"',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Espacio', value: '3U libres de separación convectiva' }],
+        role: 'Separa la zona de calor de los microprocesadores de los servidores del equipamiento de conmutación y borde.'
+      },
+
+      'r2-u11-14': {
+        category: 'RESERVA MODULAR Y TÉRMICA',
+        slot: 'RACK 2 • U11-U14 (4U)',
+        title: 'CÁMARA DE VENTILACIÓN & EXPANSIÓN (4U)',
+        model: 'Guías estándar de 19" libres',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Capacidad', value: '4U libres para crecimiento' }],
+        role: 'Espacio de reserva para incorporar un servidor de cómputo adicional o sistema de almacenamiento NAS sin requerir nuevo rack.'
+      },
+
+      'r1-u20': {
+        category: 'ORGANIZADOR HORIZONTAL',
+        slot: 'RACK 1 • U20 (1U)',
+        title: 'ORGANIZADOR PASACABLES HORIZONTAL (1U)',
+        model: 'Ducto ranurado frontal 1U',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Uso', value: 'Conducción ordenada de patch cords hacia el Switch Core' }],
+        role: 'Evita la tensión mecánica de los cables que bajan del patch panel.'
+      },
+
+      'r2-u20': {
+        category: 'ORGANIZADOR HORIZONTAL',
+        slot: 'RACK 2 • U20 (1U)',
+        title: 'ORGANIZADOR PASACABLES HORIZONTAL (1U)',
+        model: 'Ducto ranurado frontal 1U',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Uso', value: 'Conducción de cableado CCTV y APs' }],
+        role: 'Guía los cables de las cámaras hacia el switch de acceso del Rack 2.'
+      },
+
+      'r2-u17-18': {
+        category: 'ESPACIO LIBRE',
+        slot: 'RACK 2 • U17-U18 (2U)',
+        title: 'BAHÍAS DE EXPANSIÓN (2U)',
+        model: 'Espacio libre estándar',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Capacidad', value: '2U disponibles' }],
+        role: 'Reserva para appliance NVR físico dedicado o switch PoE adicional.'
+      },
+
+      'r1-u22': {
+        category: 'CIERRE SUPERIOR',
+        slot: 'RACK 1 • U22 (1U)',
+        title: 'PANEL CIEGO SUPERIOR VENTILADO',
+        model: 'Chapa microperforada 1U',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Función', value: 'Escape convectivo hacia el techo' }],
+        role: 'Permite la salida de aire caliente sin despresurizar el pasillo frío frontal.'
+      },
+
+      'r2-u22': {
+        category: 'CIERRE SUPERIOR',
+        slot: 'RACK 2 • U22 (1U)',
+        title: 'PANEL CIEGO SUPERIOR VENTILADO',
+        model: 'Chapa microperforada 1U',
+        software: 'Pasivo',
+        ip: 'N/A',
+        isServer: false,
+        specsList: [{ label: 'Función', value: 'Escape convectivo hacia el techo' }],
+        role: 'Mantiene el flujo de aire ordenado y el cierre estético superior del bastidor.'
+      }
+    };
+
+    // Inspection Handler
+    function inspect(key) {
+      const item = catalog[key];
+      if (!item) return;
+
+      // Update slot highlight
+      document.querySelectorAll('.rack-slot').forEach(el => el.classList.remove('slot-active'));
+      const activeEl = window.event ? window.event.currentTarget : null;
+      if (activeEl) activeEl.classList.add('slot-active');
+
+      // Header fields
+      document.getElementById('insp-category').textContent = item.category;
+      document.getElementById('insp-slot').textContent = item.slot;
+      document.getElementById('insp-title').textContent = item.title;
+      document.getElementById('insp-model').textContent = item.model;
+      document.getElementById('insp-software').textContent = item.software;
+      document.getElementById('insp-ip').textContent = item.ip;
+
+      const container = document.getElementById('insp-content');
+
+      if (item.isServer) {
+        // SERVER VIEW: Internal components & running workloads
+        let storageRows = item.specs.storage.map(s => `
+          <div class="p-2.5 rounded bg-brand-dark/90 border border-blue-400/20 space-y-0.5">
+            <div class="flex items-center justify-between font-mono text-[11px]">
+              <span class="text-sky-300 font-bold uppercase">${s.tier}</span>
+              <span class="text-white font-semibold">${s.drive}</span>
+            </div>
+            <p class="text-[11px] text-blue-100 leading-normal">${s.desc}</p>
+          </div>
+        `).join('');
+
+        let workloadRows = item.workloads.map(w => `
+          <div class="p-2.5 rounded bg-brand-dark/70 border border-blue-400/20 space-y-0.5">
+            <span class="font-condensed font-bold text-white block text-xs uppercase tracking-wide">${w.name}</span>
+            <p class="text-[11px] text-blue-200 leading-relaxed">${w.desc}</p>
+          </div>
+        `).join('');
+
+        container.innerHTML = `
+          <!-- Hardware Specs -->
+          <div class="space-y-2">
+            <span class="text-[11px] font-condensed font-bold uppercase tracking-wider text-blue-300 block">
+              COMPONENTES INTERNOS (CHASIS 4U)
+            </span>
+            <div class="grid grid-cols-2 gap-2 font-mono text-[11px]">
+              <div class="p-2 rounded bg-brand-dark border border-blue-400/30">
+                <span class="text-[9px] text-blue-300 uppercase block font-condensed font-bold">Procesador</span>
+                <span class="text-white">${item.specs.cpu}</span>
+              </div>
+              <div class="p-2 rounded bg-brand-dark border border-blue-400/30">
+                <span class="text-[9px] text-blue-300 uppercase block font-condensed font-bold">Memoria RAM</span>
+                <span class="text-white">${item.specs.ram}</span>
+              </div>
+              <div class="p-2 rounded bg-brand-dark border border-blue-400/30">
+                <span class="text-[9px] text-blue-300 uppercase block font-condensed font-bold">Fuente Eléctrica</span>
+                <span class="text-white">${item.specs.psu}</span>
+              </div>
+              <div class="p-2 rounded bg-brand-dark border border-blue-400/30">
+                <span class="text-[9px] text-blue-300 uppercase block font-condensed font-bold">Interfaces Red</span>
+                <span class="text-white">${item.specs.network}</span>
+              </div>
+            </div>
+
+            <!-- Storage Architecture -->
+            <div class="space-y-1.5 pt-2">
+              <span class="text-[11px] font-condensed font-bold uppercase tracking-wider text-blue-300 block">
+                ARQUITECTURA DE ALMACENAMIENTO SEGREGADO
+              </span>
+              ${storageRows}
+            </div>
+          </div>
+
+          <!-- Running Workloads -->
+          <div class="space-y-2 pt-3 border-t border-blue-400/30">
+            <span class="text-[11px] font-condensed font-bold uppercase tracking-wider text-emerald-300 block">
+              SERVICIOS & CARGAS DE TRABAJO ACTIVAS (WORKLOADS)
+            </span>
+            <div class="space-y-1.5">
+              ${workloadRows}
+            </div>
+          </div>
+        `;
+
+      } else {
+        // NETWORKING / POWER / PASSIVE VIEW
+        let specsHtml = item.specsList.map(s => `
+          <div class="flex items-center justify-between py-1 border-b border-blue-400/20 last:border-0 font-mono text-[11px]">
+            <span class="text-blue-300">${s.label}:</span>
+            <span class="text-white font-medium text-right">${s.value}</span>
+          </div>
+        `).join('');
+
+        container.innerHTML = `
+          <!-- Role summary -->
+          <div class="p-3.5 rounded bg-brand-dark/90 border border-blue-400/30 space-y-1">
+            <span class="text-[11px] font-condensed font-bold uppercase tracking-wider text-sky-300 block">
+              FUNCIÓN EN LA ARQUITECTURA
+            </span>
+            <p class="text-blue-100 leading-relaxed text-xs">${item.role}</p>
+          </div>
+
+          <!-- Specs list -->
+          <div class="p-3.5 rounded bg-brand-dark/70 border border-blue-400/20 space-y-1">
+            <span class="text-[11px] font-condensed font-bold uppercase tracking-wider text-blue-200 block mb-1">
+              ESPECIFICACIONES TÉCNICAS
+            </span>
+            <div class="space-y-0.5">
+              ${specsHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      lucide.createIcons();
+    }
+
+    // Filter Logic
+    function setFilter(type) {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-brand', 'text-white');
+        b.classList.add('text-brand');
+      });
+      const activeBtn = document.getElementById(`btn-${type}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-brand', 'text-white');
+        activeBtn.classList.remove('text-brand');
+      }
+
+      document.querySelectorAll('.rack-slot').forEach(el => {
+        const itemType = el.getAttribute('data-type');
+        if (type === 'all' || itemType === type) {
+          el.style.opacity = '1';
+        } else {
+          el.style.opacity = '0.2';
+        }
+      });
+    }
+
+    // Export Canvas to PNG
+    function exportDiagramImage() {
+      const target = document.getElementById('racks-canvas');
+      html2canvas(target, {
+        backgroundColor: '#F4F7FC',
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Elevacion_Racks_22U_BismiPay_Editorial.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Default inspection on load
+    window.onload = function() {
+      lucide.createIcons();
+      // Inspect Server 3 by default
+      const defaultEl = document.querySelector('[onclick="inspect(\'r1-u03-06\')"]');
+      if (defaultEl) defaultEl.classList.add('slot-active');
+      inspect('r1-u03-06');
+    };
+  </script>
+
+</body>
+</html>
